@@ -40,5 +40,6 @@ public class User extends AbstractPersistable<Integer> {
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
     @ElementCollection(fetch = FetchType.EAGER)
+//    @BatchSize(size = 20)
     private Set<Role> roles;
 }

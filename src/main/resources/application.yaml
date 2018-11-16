@@ -1,0 +1,20 @@
+#  https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
+spring:
+  jpa:
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+      use-new-id-generator-mappings: false
+    properties:
+      #  http://docs.jboss.org/hibernate/orm/5.3/userguide/html_single/Hibernate_User_Guide.html#configurations
+      hibernate:
+        format_sql: true
+        #  https://access.redhat.com/documentation/en-us/jboss_enterprise_application_platform/5/html/performance_tuning_guide/sect-performance_tuning_guide-entity_beans-batching_database_operations
+        default_batch_fetch_size: 20
+        jdbc.batch_size: 20
+  #     jdbc.fetch_size: 20
+  datasource:
+    url: jdbc:h2:mem:voting
+    username: sa
+    password:
