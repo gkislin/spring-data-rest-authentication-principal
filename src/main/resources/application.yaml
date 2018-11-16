@@ -15,6 +15,20 @@ spring:
         jdbc.batch_size: 20
   #     jdbc.fetch_size: 20
   datasource:
+    # ImMemory
     url: jdbc:h2:mem:voting
+    #   tcp: jdbc:h2:tcp://localhost:9092/mem:voting
+    # Absolute path
+    #    url: jdbc:h2:C:/projects/hyperjava/restorant-voting/db/voting
+    #    tcp:     jdbc:h2:tcp://localhost:9092/C:/projects/hyperjava/restorant-voting/db/voting
+    #    offline: jdbc:h2:C:/projects/hyperjava/restorant-voting/db/voting
+    # Relative path1
+    #    url: jdbc:h2:./db/voting
+    #    tcp, offline: absolute path
+    # Relative path2
+    #    url: jdbc:h2:~/voting
+    #    tcp:     jdbc:h2:tcp://localhost:9092/~/voting
+    #    offline: jdbc:h2:~/voting
     username: sa
     password:
+  h2.console.enabled: true
