@@ -1,7 +1,6 @@
 package ru.javaops.bootjava.restaurantvoting.web;
 
 import lombok.AllArgsConstructor;
-import org.springframework.data.rest.webmvc.BasePathAwareController;
 import org.springframework.data.rest.webmvc.RepositoryLinksResource;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
@@ -11,7 +10,7 @@ import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import ru.javaops.bootjava.restaurantvoting.model.Vote;
 import ru.javaops.bootjava.restaurantvoting.repository.VoteRepository;
 
@@ -23,11 +22,18 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
-@BasePathAwareController
-@ResponseBody
+/**
+ * Do not use {@link org.springframework.data.rest.webmvc.BasePathAwareController}
+ * cause of bugs:
+ * <a href="https://github.com/spring-projects/spring-hateoas/issues/434">data.rest.base-path missed in HAL links</a><br>
+ * <a href="https://jira.spring.io/browse/DATAREST-748">Two endpoints created</a></li>
+ * <p>
+ * RequestMapping("/${spring.data.rest.base-path}/votes") give NPE in process()
+ */
+@RestController
 @AllArgsConstructor
 // TODO replace 1 to authorized User
-@RequestMapping(value = "/votes", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
+@RequestMapping(value = "/api/votes", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
 public class VoteController implements ResourceProcessor<RepositoryLinksResource> {
 
     private final VoteRepository repository;
