@@ -1,12 +1,12 @@
 package ru.javaops.bootjava.restaurantvoting.web;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.RepositoryLinksResource;
-import org.springframework.hateoas.MediaTypes;
-import org.springframework.hateoas.Resource;
-import org.springframework.hateoas.ResourceProcessor;
-import org.springframework.hateoas.Resources;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.*;
+import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,9 +15,7 @@ import ru.javaops.bootjava.restaurantvoting.model.Vote;
 import ru.javaops.bootjava.restaurantvoting.repository.VoteRepository;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
@@ -38,35 +36,35 @@ public class VoteController implements ResourceProcessor<RepositoryLinksResource
 
     private final VoteRepository repository;
 
+    private static final ResourceAssemblerSupport<Vote, Resource> RESOURCE_ASSEMBLER = new ResourceAssemblerSupport<>(VoteController.class, Resource.class) {
+        @Override
+        public Resource<Vote> toResource(Vote vote) {
+            return new Resource<>(vote, vote.getDate().equals(LocalDate.now()) ?
+                    new Link[]{linkTo(methodOn(VoteController.class).current()).withSelfRel()} :
+                    new Link[]{});
+        }
+    };
+
     @GetMapping
-    public Resources<Resource<Vote>> history() {
-        var votes = repository.getAllByUserId(1);
-        var now = LocalDate.now();
-
-        List<Resource<Vote>> resourceList = votes.stream()
-                .map(vote -> vote.getDate().equals(now) ?
-                        new Resource<>(vote, linkTo(methodOn(VoteController.class).current()).withSelfRel()) :
-                        new Resource<>(vote))
-                .collect(Collectors.toList());
-
-        return new Resources<>(resourceList,
-                linkTo(methodOn(VoteController.class).history()).withSelfRel(),
-                linkTo(methodOn(VoteController.class).current()).withRel("current"));
+    public PagedResources<Resource> history(Pageable page, PagedResourcesAssembler<Vote> pagedAssembler) {
+        Page<Vote> pageResult = repository.getAllByUserId(1, page);
+        PagedResources<Resource> resources = pagedAssembler.toResource(pageResult, RESOURCE_ASSEMBLER);
+        resources.add(linkTo(methodOn(VoteController.class).current()).withRel("current"));
+        return resources;
     }
 
     @GetMapping("/current")
     public ResponseEntity<?> current() {
         Optional<Vote> optionalResult = repository.getByUserIdAndDate(1, LocalDate.now());
         return optionalResult
-                .map(vote -> ResponseEntity.ok(
-                        new Resource<>(vote, linkTo(methodOn(VoteController.class).current()).withSelfRel())))
+                .map(vote -> ResponseEntity.ok(RESOURCE_ASSEMBLER.toResource(vote)))
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     //  https://stackoverflow.com/questions/23135756/how-to-add-links-to-root-resource-in-spring-data-rest
     @Override
     public RepositoryLinksResource process(RepositoryLinksResource resource) {
-        resource.add(ControllerLinkBuilder.linkTo(VoteController.class).withRel("votes"));
+        resource.add(new Link(linkTo(VoteController.class).toString() + "{?page,size,sort}").withRel("votes"));
         return resource;
     }
 }
