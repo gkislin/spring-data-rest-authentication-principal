@@ -31,8 +31,18 @@ spring:
     username: sa
     password:
   h2.console.enabled: true
+
   data.rest:
     #  https://docs.spring.io/spring-data/rest/docs/current/reference/html/#getting-started.basic-settings
     basePath: /api
     defaultPageSize: 20
     returnBodyOnCreate: true
+
+  #  https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html#common-application-properties-security
+  security:
+    user:
+      name: user
+      password: password
+      roles: USER
+
+logging.level.org.springframework.security.web.FilterChainProxy: DEBUG
