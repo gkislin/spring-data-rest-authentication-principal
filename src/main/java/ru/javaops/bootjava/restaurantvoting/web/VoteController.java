@@ -8,9 +8,11 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.*;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ru.javaops.bootjava.restaurantvoting.AuthUser;
 import ru.javaops.bootjava.restaurantvoting.model.Vote;
 import ru.javaops.bootjava.restaurantvoting.repository.VoteRepository;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
 
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+import static org.springframework.util.Assert.notNull;
 
 /**
  * Do not use {@link org.springframework.data.rest.webmvc.BasePathAwareController}
@@ -30,7 +33,6 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
  */
 @RestController
 @AllArgsConstructor
-// TODO replace 1 to authorized User
 @RequestMapping(value = "/api/votes", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
 public class VoteController implements ResourceProcessor<RepositoryLinksResource> {
 
@@ -40,22 +42,24 @@ public class VoteController implements ResourceProcessor<RepositoryLinksResource
         @Override
         public Resource<Vote> toResource(Vote vote) {
             return new Resource<>(vote, vote.getDate().equals(LocalDate.now()) ?
-                    new Link[]{linkTo(methodOn(VoteController.class).current()).withSelfRel()} :
+                    new Link[]{linkTo(methodOn(VoteController.class).current(null)).withSelfRel()} :
                     new Link[]{});
         }
     };
 
     @GetMapping
-    public PagedResources<Resource> history(Pageable page, PagedResourcesAssembler<Vote> pagedAssembler) {
-        Page<Vote> pageResult = repository.getAllByUserId(1, page);
+    public PagedResources<Resource> history(@AuthenticationPrincipal AuthUser authUser, Pageable page, PagedResourcesAssembler<Vote> pagedAssembler) {
+        notNull(authUser, "no authenticationPrincipal");
+        Page<Vote> pageResult = repository.getAllByUserId(authUser.getUser().getId(), page);
         PagedResources<Resource> resources = pagedAssembler.toResource(pageResult, RESOURCE_ASSEMBLER);
-        resources.add(linkTo(methodOn(VoteController.class).current()).withRel("current"));
+        resources.add(linkTo(methodOn(VoteController.class).current(null)).withRel("current"));
         return resources;
     }
 
     @GetMapping("/current")
-    public ResponseEntity<?> current() {
-        Optional<Vote> optionalResult = repository.getByUserIdAndDate(1, LocalDate.now());
+    public ResponseEntity<?> current(@AuthenticationPrincipal AuthUser authUser) {
+        notNull(authUser, "no authenticationPrincipal");
+        Optional<Vote> optionalResult = repository.getByUserIdAndDate(authUser.getUser().getId(), LocalDate.now());
         return optionalResult
                 .map(vote -> ResponseEntity.ok(RESOURCE_ASSEMBLER.toResource(vote)))
                 .orElseGet(() -> ResponseEntity.noContent().build());
