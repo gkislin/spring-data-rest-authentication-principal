@@ -38,6 +38,8 @@ spring:
     defaultPageSize: 20
     returnBodyOnCreate: true
 
+  mvc.date-format: yyyy-MM-dd
+
   #  https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html#common-application-properties-security
   security:
     user:

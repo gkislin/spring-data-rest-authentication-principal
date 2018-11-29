@@ -28,8 +28,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+//  https://stackoverflow.com/questions/25234164/spring-security-http-antmatcher-with-multiple-paths
         http.authorizeRequests()
                 .antMatchers("/api/users/**").hasAuthority(Role.ROLE_ADMIN.getAuthority())
+                .antMatchers("/api/menu-items/**").hasAuthority(Role.ROLE_ADMIN.getAuthority())
+                .antMatchers("/api/lunch-refs/**").hasAuthority(Role.ROLE_ADMIN.getAuthority())
+                .antMatchers("/api/restaurants/**").hasAuthority(Role.ROLE_ADMIN.getAuthority())
                 .antMatchers("/api/**").authenticated()
                 .and().httpBasic()
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
