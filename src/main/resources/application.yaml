@@ -5,7 +5,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: create-drop
-      use-new-id-generator-mappings: false
     properties:
       #  http://docs.jboss.org/hibernate/orm/5.3/userguide/html_single/Hibernate_User_Guide.html#configurations
       hibernate:
