@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
+import org.springframework.hateoas.Identifiable;
 
 import javax.persistence.*;
 
@@ -15,7 +16,7 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractBaseEntity {
+public abstract class AbstractBaseEntity implements Identifiable<Integer> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
