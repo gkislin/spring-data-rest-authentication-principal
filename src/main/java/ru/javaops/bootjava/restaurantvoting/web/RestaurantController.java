@@ -5,9 +5,11 @@ import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import ru.javaops.bootjava.restaurantvoting.AuthUser;
 import ru.javaops.bootjava.restaurantvoting.model.Restaurant;
 import ru.javaops.bootjava.restaurantvoting.model.User;
 import ru.javaops.bootjava.restaurantvoting.model.Vote;
@@ -32,11 +34,11 @@ public class RestaurantController {
     private final VoteController.VoteAssembler voteAssembler;
     private final VoteRepository voteRepository;
 
-    @PostMapping(value = "/restaurants/{id}/vote", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
+    @GetMapping(value = "/restaurants/{id}/vote", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
     @ResponseBody
-    public ResponseEntity<Resource<Vote>> vote(@PathVariable int id) {
+    public ResponseEntity<Resource<Vote>> vote(@PathVariable int id, @AuthenticationPrincipal AuthUser authUser) {
 //        https://jira.spring.io/browse/DATAREST-1312
-        User user = SecurityUtil.get().getUser();
+        User user = authUser.getUser();
         Optional<Vote> optionalResult = voteRepository.getByUserIdAndDate(user.getId(), LocalDate.now());
         Restaurant restaurant = restaurantRepository.getOne(id);
         LocalTime now = LocalTime.now();
