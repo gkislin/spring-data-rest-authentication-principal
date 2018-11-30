@@ -6,9 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.rest.webmvc.RepositoryLinksResource;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.*;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,27 +38,15 @@ import static org.springframework.util.Assert.notNull;
 @RequestMapping(value = "/api/votes", produces = MediaTypes.HAL_JSON_UTF8_VALUE)
 public class VoteController implements ResourceProcessor<RepositoryLinksResource> {
 
+    private final VoteAssembler voteAssembler;
     private final VoteRepository repository;
-    private final EntityLinks entityLinks;
-
-    private final ResourceAssemblerSupport<Vote, Resource> RESOURCE_ASSEMBLER = new ResourceAssemblerSupport<>(VoteController.class, Resource.class) {
-        @Override
-        public Resource<Vote> toResource(Vote vote) {
-            Resource<Vote> resource = new Resource<>(vote);
-            if (vote.getDate().equals(LocalDate.now())) {
-                resource.add(linkTo(methodOn(VoteController.class).current(null)).withSelfRel());
-            }
-            resource.add(entityLinks.linkToSingleResource(vote.getRestaurant()).withRel("restaurant"));
-            return resource;
-        }
-    };
 
     @GetMapping
     public PagedResources<Resource> history(@AuthenticationPrincipal AuthUser authUser, Pageable page, PagedResourcesAssembler<Vote> pagedAssembler) {
         notNull(authUser, "no authenticationPrincipal");
         Page<Vote> pageResult = repository.getAllByUserId(authUser.getUser().getId(), page);
-        PagedResources<Resource> resources = pagedAssembler.toResource(pageResult, RESOURCE_ASSEMBLER);
-        resources.add(linkTo(methodOn(VoteController.class).current(null)).withRel("current"));
+        PagedResources<Resource> resources = pagedAssembler.toResource(pageResult, voteAssembler);
+        resources.add(voteAssembler.getLinkToCurrent().withRel("current"));
         return resources;
     }
 
@@ -65,7 +55,7 @@ public class VoteController implements ResourceProcessor<RepositoryLinksResource
         notNull(authUser, "no authenticationPrincipal");
         Optional<Vote> optionalResult = repository.getByUserIdAndDate(authUser.getUser().getId(), LocalDate.now());
         return optionalResult
-                .map(vote -> ResponseEntity.ok(RESOURCE_ASSEMBLER.toResource(vote)))
+                .map(vote -> ResponseEntity.ok(voteAssembler.toResource(vote)))
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
@@ -74,5 +64,29 @@ public class VoteController implements ResourceProcessor<RepositoryLinksResource
     public RepositoryLinksResource process(RepositoryLinksResource resource) {
         resource.add(new Link(linkTo(VoteController.class).toString() + "{?page,size,sort}").withRel("votes"));
         return resource;
+    }
+
+    @Component
+    public static class VoteAssembler extends ResourceAssemblerSupport<Vote, Resource> {
+        private final EntityLinks entityLinks;
+
+        public VoteAssembler(EntityLinks entityLinks) {
+            super(VoteController.class, Resource.class);
+            this.entityLinks = entityLinks;
+        }
+
+        @Override
+        public Resource<Vote> toResource(Vote vote) {
+            Resource<Vote> resource = new Resource<>(vote);
+            if (vote.getDate().equals(LocalDate.now())) {
+                resource.add(getLinkToCurrent().withSelfRel());
+            }
+            resource.add(entityLinks.linkToSingleResource(vote.getRestaurant()).withRel("restaurant"));
+            return resource;
+        }
+
+        public ControllerLinkBuilder getLinkToCurrent() {
+            return linkTo(methodOn(VoteController.class).current(null));
+        }
     }
 }

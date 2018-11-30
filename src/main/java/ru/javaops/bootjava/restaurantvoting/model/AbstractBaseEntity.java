@@ -1,10 +1,12 @@
 package ru.javaops.bootjava.restaurantvoting.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
+import org.springframework.data.domain.Persistable;
 import org.springframework.hateoas.Identifiable;
 
 import javax.persistence.*;
@@ -16,7 +18,7 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public abstract class AbstractBaseEntity implements Identifiable<Integer> {
+public abstract class AbstractBaseEntity implements Persistable<Integer>, Identifiable<Integer> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,6 +30,12 @@ public abstract class AbstractBaseEntity implements Identifiable<Integer> {
     }
 
 //    https://stackoverflow.com/questions/1638723/how-should-equals-and-hashcode-be-implemented-when-using-jpa-and-hibernate
+
+    @Override
+    @JsonIgnore
+    public boolean isNew() {
+        return id == null;
+    }
 
     @Override
     public boolean equals(Object o) {
