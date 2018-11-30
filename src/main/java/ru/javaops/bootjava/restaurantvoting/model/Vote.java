@@ -1,6 +1,5 @@
 package ru.javaops.bootjava.restaurantvoting.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +21,6 @@ public class Vote extends AbstractBaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     @NotNull
-    @JsonIgnore
     private User user;
 
     @NotNull
@@ -32,4 +30,9 @@ public class Vote extends AbstractBaseEntity {
     @NotNull
     @Column(name = "time", nullable = false)
     private LocalTime time;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    @NotNull
+    private Restaurant restaurant;
 }

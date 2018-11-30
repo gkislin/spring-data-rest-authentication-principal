@@ -15,6 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Setter
+@RestResource(path = "restaurants")
 public class Restaurant extends AbstractNamedEntity {
 
     public Restaurant(Integer id, String name, String address) {

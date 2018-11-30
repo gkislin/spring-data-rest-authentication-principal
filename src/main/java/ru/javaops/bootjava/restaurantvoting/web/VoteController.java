@@ -37,13 +37,17 @@ import static org.springframework.util.Assert.notNull;
 public class VoteController implements ResourceProcessor<RepositoryLinksResource> {
 
     private final VoteRepository repository;
+    private final EntityLinks entityLinks;
 
-    private static final ResourceAssemblerSupport<Vote, Resource> RESOURCE_ASSEMBLER = new ResourceAssemblerSupport<>(VoteController.class, Resource.class) {
+    private final ResourceAssemblerSupport<Vote, Resource> RESOURCE_ASSEMBLER = new ResourceAssemblerSupport<>(VoteController.class, Resource.class) {
         @Override
         public Resource<Vote> toResource(Vote vote) {
-            return new Resource<>(vote, vote.getDate().equals(LocalDate.now()) ?
-                    new Link[]{linkTo(methodOn(VoteController.class).current(null)).withSelfRel()} :
-                    new Link[]{});
+            Resource<Vote> resource = new Resource<>(vote);
+            if (vote.getDate().equals(LocalDate.now())) {
+                resource.add(linkTo(methodOn(VoteController.class).current(null)).withSelfRel());
+            }
+            resource.add(entityLinks.linkToSingleResource(vote.getRestaurant()).withRel("restaurant"));
+            return resource;
         }
     };
 
